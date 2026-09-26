@@ -20,7 +20,7 @@ jobs:
 
       - name: Luo zip-paketti
         shell: pwsh
-        run: Compress-Archive -Path "target/release/muistikortti_palautus.exe","target/release/OHJEET.txt","target/release/KAYNNISTA.bat" -DestinationPath muistikortti_palautus-${{ github.ref_name }}.zip
+        run: Compress-Archive -Path "target/release/muistikortti_palautus.exe","OHJEET.txt","KAYNNISTA.bat" -DestinationPath muistikortti_palautus-${{ github.ref_name }}.zip
 
       - name: Liita zip julkaisuun
         uses: softprops/action-gh-release@v2
