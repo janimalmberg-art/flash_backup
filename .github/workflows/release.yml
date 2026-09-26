@@ -1,0 +1,28 @@
+name: Julkaisu
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Release-kaannos
+        run: cargo build --release
+
+      - name: Luo zip-paketti
+        shell: pwsh
+        run: Compress-Archive -Path "target/release/muistikortti_palautus.exe","target/release/OHJEET.txt","target/release/KAYNNISTA.bat" -DestinationPath muistikortti_palautus-${{ github.ref_name }}.zip
+
+      - name: Liita zip julkaisuun
+        uses: softprops/action-gh-release@v2
+        with:
+          files: muistikortti_palautus-*.zip

@@ -1,0 +1,26 @@
+name: Kaannos ja testit
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Rakenna ja aja testit
+        run: cargo test --verbose
+
+      - name: Release-kaannos
+        run: cargo build --release --verbose
+
+      - name: Tallenna exe-artifakti
+        uses: actions/upload-artifact@v4
+        with:
+          name: muistikortti_palautus-windows
+          path: target/release/muistikortti_palautus.exe

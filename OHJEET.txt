@@ -1,0 +1,96 @@
+================================================================
+ MUISTIKORTIN SYVÄPALAUTUS - KÄYTTÖOHJEET
+================================================================
+
+MITÄ OHJELMA TEKEE?
+-------------------
+Työkalu lukee muistikortin (tai muun FAT-tiedostojärjestelmän
+levykuvan) raakatavuina ja yrittää palauttaa tiedostoja kolmella
+tavalla:
+
+  1. PERINTEINEN PALAUTUS - FAT-kirjaston avulla luetaan
+     juurihakemiston elävät tiedostot ja tallennetaan ne.
+
+  2. SYVÄPALAUTUS - kävelee koko hakemistopuun (myös
+     alihakemistot), löytää myös POISETUT tiedostot (merkinnän
+     ensimmäinen tavu on poistossa 0xE5) ja rakentaa pitkät
+     tiedostonimet (LFN) uudelleen. Jos FAT-ketju on ehjä,
+     tiedosto palautuu täsmälleen alkuperäisenä; jos ketju on
+     katkennut, data luetaan peräkkäisinä klustereina ja ohjelma
+     kertoo siitä erikseen.
+
+  3. SIGNATUURIPALAUTUS (carving) - etsii raakadatasta
+     tunnettujen tiedostomuotojen alkumerkkejä (WAV, PNG, JPEG,
+     ZIP, MP4, BMP, SQLite) ja palauttaa ne myös silloin, kun
+     tiedostojärjestelmä on tuhoutunut tai kortti on formatoitu.
+     Vääriä osumia suodatetaan otsikkotietojen tarkistuksella.
+
+TURVALLISUUS
+------------
+- Kortille EI kirjoiteta mitään: lähde avataan vain lukutilassa.
+- Palautetut tiedostot tallennetaan työhakemistoon kansioihin:
+    palautetut\        - syväpalautuksen ja selauksen tulokset
+    palautetut_carve\  - signatuuriskannauksen tulokset
+- Aja ohjelma JÄRJESTELMÄNVALVOJANA, muuten raakalaitteen
+  avaus epäonnistuu.
+
+PAKAJÄRJESTELMÄ: KAKSOISNAPSUTUS
+--------------------------------
+1. Purkaa zip-kansioon.
+2. Aja KAYNNISTA.bat - se kohottaa oikeudet automaattisesti ja
+   käynnistää valikko-ohjelman.
+3. Anna muistikortin asematunnus (esim. D) ja jatka valikoista.
+
+KOMENTORIVI (PAKETTITILA, EI VALIKOITA)
+---------------------------------------
+Käyttö:  muistikortti_palautus.exe <lähde>
+
+Lähde voi olla:
+  - asematunnus         D                    (volyymi)
+  - fyysinen levy       PHYSICALDRIVE1       (koko kortti/levy)
+  - levykuvatiedosto    C:\polku\kortti.img  (.img / .dd / .raw)
+
+Esimerkkejä:
+  muistikortti_palautus.exe D
+  muistikortti_palautus.exe PHYSICALDRIVE1
+  muistikortti_palautus.exe D:\levykuvat\kortti.img
+
+Pakettitila analysoi lähteen, palauttaa löydetyt poistetut
+tiedostot ja ajaa signatuuriskannauksen. Jos FAT-rakennetta ei
+löydy, ajetaan vain signatuuriskannaus.
+
+VUOROVAIKUTTEINEN TILA
+----------------------
+Ilman argumentteja ohjelma avaa valikon:
+  - Analysoi tiedostojärjestelmä (MBR / boot-sektori)
+  - Perinteinen palautus
+  - Syväpalautus (elävät + poistetut, myös alihakemistot)
+  - Signatuuriskannaus (toimii myös formatoituun korttiin)
+  - Ohjattu sektoriselaus (hexdump, haku, tallennus)
+
+RAJOITUKSET
+-----------
+- FAT12/16/32 on tuettu kokonaan; exFAT/NTFS-korteissa toimii
+  vain signatuuriskannaus.
+- Pirstaleiset poistetut tiedostot voivat palautua väärin -
+  ohjelma varoittaa, kun data luettiin peräkkäin arvaamalla.
+- Ylikirjoitettua dataa ei mikään työkalu voi palauttaa.
+- Älä kirjoita kortille mitään ennen palautusta, jotta poistettu
+  data ei katoa.
+
+RAKENNUS LÄHTEISTÄ
+------------------
+Vaatii Rust-työkalut (https://rustup.rs).
+  cargo build --release   ->  target\release\muistikortti_palautus.exe
+  cargo test              ->  19 testiä (yksikkö- ja
+                              kokonaisuustestit kuvatiedostoilla)
+
+LÄHDEKOODIN RAKENNE
+-------------------
+  src\main.rs     - valikot ja pakettitila
+  src\rawdev.rs   - raakalaitteen ja levykuvan avaus
+  src\fatinfo.rs  - FAT-analyysi (MBR, boot-sektori, FAT-taulu)
+  src\fatwalk.rs  - hakemistopuu, LFN-nimet, poistettujen palautus
+  src\carve.rs    - signatuuriskannaus (7 tiedostomuotoa)
+  src\browser.rs  - sektoriselain
+  src\selftest.rs - loppuun asti menevät testit

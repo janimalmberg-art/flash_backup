@@ -1,0 +1,20 @@
+[package]
+name = "muistikortti_palautus"
+version = "0.2.0"
+edition = "2021"
+description = "Muistikortin syväpalautustyökalu: poistettujen tiedostojen palautus FAT12/16/32 -asemilta ja levykuvista"
+license = "MIT"
+readme = "README.md"
+authors = ["<annatähän nimesi>"]
+repository = "https://github.com/<kayttajatunnuksesi>/muistikortti_palautus"
+keywords = ["data-recovery", "fat32", "sd-card", "carving", "forensics"]
+categories = ["command-line-utilities"]
+
+[dependencies]
+fatfs = "0.3"
+fscommon = "0.1"
+dialoguer = "0.11"
+
+[profile.release]
+lto = true
+strip = true
